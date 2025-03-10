@@ -16,48 +16,52 @@
 -1000 <= nums[i] <= 1000
 -104 <= target <= 104
 """
+from math import inf
 from typing import List
 
 
 class Solution:
-    def abs1(self, x, y):
-        if x > y:
-            return x - y
-        else:
-            return y - x
-
-    def nums_count(self, nums, i, j, k):
-        """用于计算三个值之和"""
-        return nums[i] + nums[j] + nums[k]
-
     def threeSumClosest(self, nums: List[int], target: int) -> int:
-        nums.sort()  # 变成顺序
-        ret = self.nums_count(nums, 0, 1, -1)  # 全局
-        ret_old = 0  # 存储上一步的值
-        ret_new = 0  # 初始化要输出的结果
-        for i in range(0, len(nums) - 2):
-            j = i + 1
-            k = len(nums) - 1
-            ret_old = self.nums_count(nums, i, j, k)
-            while k > j:
-                ret_new = self.nums_count(nums, i, j, k)
-                if ret_new > target:
+        nums.sort()
+        n = len(nums)
+        min_diff = inf
+        for i in range(n - 2):
+            x = nums[i]
+            if i and x == nums[i - 1]:
+                continue  # 优化三
+
+            # 优化一
+            s = x + nums[i + 1] + nums[i + 2]
+            if s > target:  # 后面无论怎么选，选出的三个数的和不会比 s 还小
+                if s - target < min_diff:
+                    ans = s  # 由于下一行直接 break，这里无需更新 min_diff
+                break
+
+            # 优化二
+            s = x + nums[-2] + nums[-1]
+            if s < target:  # x 加上后面任意两个数都不超过 s，所以下面的双指针就不需要跑了
+                if target - s < min_diff:
+                    min_diff = target - s
+                    ans = s
+                continue
+
+            # 双指针
+            j, k = i + 1, n - 1
+            while j < k:
+                s = x + nums[j] + nums[k]
+                if s == target:
+                    return s
+                if s > target:
+                    if s - target < min_diff:  # s 与 target 更近
+                        min_diff = s - target
+                        ans = s
                     k -= 1
-                    if self.abs1(ret_new, target) > self.abs1(ret_old, target):
-                        """说明这一次结果比上一次结果更大"""
-                        break
-                    else:
-                        """说明这一次结果比上一次结果更小"""
-                        ret_old = ret_new
-                else:
+                else:  # s < target
+                    if target - s < min_diff:  # s 与 target 更近
+                        min_diff = target - s
+                        ans = s
                     j += 1
-                    if self.abs1(ret_new, target) > self.abs1(ret_old, target):
-                        break
-                    else:
-                        ret_old = ret_new
-            if self.abs1(ret, target) > self.abs1(ret_old, target):
-                ret = ret_old
-        return ret
+        return ans
 
 
 if __name__ == '__main__':
